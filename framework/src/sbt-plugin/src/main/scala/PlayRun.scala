@@ -6,6 +6,7 @@ import play.core.SBTLink
 import play.console.Colors
 import annotation.tailrec
 import scala.collection.JavaConverters._
+import play.PlayRunHook
 
 /**
  * Provides mechanisms for running a Play application in SBT
@@ -65,9 +66,9 @@ trait PlayRun extends PlayInternalKeys {
   val playRunSetting: Project.Initialize[InputTask[Unit]] = playRunTask(dependencyClasspath in Compile, playClassLoaderCreator)
 
   def playRunTask(classpathTask: TaskKey[Classpath], classLoaderTask: TaskKey[ClassLoaderCreator]): Project.Initialize[InputTask[Unit]] = inputTask { (argsTask: TaskKey[Seq[String]]) =>
-    (argsTask, state, classLoaderTask) map { (args, state, createClassLoader) =>
+    (argsTask, state, classLoaderTask, playRunHooks) map { (args, state, createClassLoader, hooks) =>
+      
       val extracted = Project.extract(state)
-
       val (properties, httpPort, httpsPort) = filterArgs(args, defaultHttpPort = extracted.get(playDefaultPort))
 
       require(httpPort.isDefined || httpsPort.isDefined, "You have to specify https.port when http.port is disabled")
@@ -152,6 +153,10 @@ trait PlayRun extends PlayInternalKeys {
         lazy val reloader = newReloader(state, playReload, applicationLoader)
 
         val mainClass = applicationLoader.loadClass("play.core.server.NettyServer")
+        
+        // Now we're about to start, let's call the hooks:
+        hooks.run(_.beforeStarted())
+        
         val server = if (httpPort.isDefined) {
           val mainDev = mainClass.getMethod("mainDevHttpMode", classOf[play.core.SBTLink], classOf[Int])
           mainDev.invoke(null, reloader, httpPort.get: java.lang.Integer).asInstanceOf[play.core.server.ServerWithStop]
@@ -162,7 +167,7 @@ trait PlayRun extends PlayInternalKeys {
         }
 
         // Notify hooks
-        extracted.get(playOnStarted).foreach(_(server.mainAddress))
+        hooks.run(_.afterStarted(server.mainAddress))
 
         println()
         println(Colors.green("(Server started, use Ctrl+D to stop and go back to the console...)"))
@@ -246,7 +251,7 @@ trait PlayRun extends PlayInternalKeys {
         reloader.clean()
 
         // Notify hooks
-        extracted.get(playOnStopped).foreach(_())
+        hooks.run(_.afterStopped())
 
         newState
       }
