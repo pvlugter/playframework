@@ -148,6 +148,8 @@ trait PlaySettings {
 
     playOnStopped := Nil,
     
+    playRunHooks := Nil,
+    
     playRunHooks <++= playOnStarted map { funcs =>
        funcs map play.PlayRunHook.makeRunHookFromOnStarted  
     },
@@ -155,6 +157,8 @@ trait PlaySettings {
     playRunHooks <++= playOnStopped map { funcs =>
        funcs map play.PlayRunHook.makeRunHookFromOnStopped
     },
+    
+    playInteractionMode :=  play.PlayConsoleInteractionMode,
     
     // Assets
 
