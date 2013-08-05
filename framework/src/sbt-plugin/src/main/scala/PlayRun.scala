@@ -43,13 +43,16 @@ trait PlayRun extends PlayInternalKeys {
   val playRunSetting: Project.Initialize[InputTask[Unit]] = playRunTask(dependencyClasspath in Compile, playClassLoaderCreator)
 
   def playRunTask(classpathTask: TaskKey[Classpath], classLoaderTask: TaskKey[ClassLoaderCreator]): Project.Initialize[InputTask[Unit]] = inputTask { (argsTask: TaskKey[Seq[String]]) =>
-    (argsTask, state, classLoaderTask, playRunHooks, playInteractionMode) map { (args, state, createClassLoader, hooks, interaction) =>
+    (argsTask, state, classLoaderTask, sbt.Keys.streams) map { (args, state, createClassLoader, s) =>
       
       val extracted = Project.extract(state)
       val (properties, httpPort, httpsPort) = filterArgs(args, defaultHttpPort = extracted.get(playDefaultPort))
 
       require(httpPort.isDefined || httpsPort.isDefined, "You have to specify https.port when http.port is disabled")
 
+      val (_, hooks) = extracted.runTask(playRunHooks, state)
+      val interaction = extracted.get(playInteractionMode)
+      
       // Set Java properties
       properties.foreach {
         case (key, value) => System.setProperty(key, value)
@@ -64,7 +67,7 @@ trait PlayRun extends PlayInternalKeys {
         throw commonLoaderEither.left.get
       }
       val maybeNewState = Project.runTask(classpathTask, state).get._2.toEither.right.map { dependencies =>
-
+	
         // All jar dependencies. They will not been reloaded and must be part of this top classloader
         val classpath = dependencies.map(_.data.toURI.toURL).filter(_.toString.endsWith(".jar")).toArray
 
