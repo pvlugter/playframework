@@ -37,17 +37,24 @@ object PlayRunHook {
   // A bit of a magic hack to clean up the PlayRun file
   implicit class RunHooksRunner(val hooks: Seq[PlayRunHook]) extends AnyVal {
     /** Runs all the hooks in the sequence of hooks.  reports last failure if any have failure. */
-    def run(f: PlayRunHook => Unit, suppressFailure: Boolean = false): Unit = {
+    def run(f: PlayRunHook => Unit, suppressFailure: Boolean = false): Unit = try {
       // TODO - Should we ignore failure?  Probably not... but just sending first fail may be bad too.
       // TODO - Should probably have a cleanup method on hooks in case of failure...
       var lastFailure: Option[Throwable] = None
-      for(hook <- hooks) 
-        try f(hook) catch {
-          case util.control.NonFatal(e) => 
+      hooks foreach { hook =>
+        try {
+          f(hook)
+        } catch {
+          case e: Throwable => 
+            // Just save the last failure for now...
             lastFailure = Some(e)
         }
+      }
       // Throw failure if it occurred....
       if(!suppressFailure) lastFailure foreach (throw _)
+    } catch {
+      case e: Throwable  if suppressFailure =>
+        // Ignoring failure in running hooks... (CCE thrown here)
     }
   }
 }
