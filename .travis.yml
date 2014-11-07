@@ -1,0 +1,16 @@
+language: scala
+
+scala:
+- 2.10.4
+- 2.11.2
+
+jdk:
+- oraclejdk7
+- oraclejdk8
+
+env:
+  matrix:
+    - PLAY_TEST="cd framework && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test"
+    - PLAY_TEST="cd documentation && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test validateDocs"
+
+script: eval "$PLAY_TEST"
