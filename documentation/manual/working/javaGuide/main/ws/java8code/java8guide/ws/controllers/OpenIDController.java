@@ -22,11 +22,11 @@ public class OpenIDController extends Controller {
   }
 
   public Promise<Result> loginPost() {
-    
+
     // Form data
     final DynamicForm requestData = Form.form().bindFromRequest();
     final String openID = requestData.get("openID");
-    
+
     final Promise<String> redirectUrlPromise =
         openIdClient.redirectURL(openID, routes.OpenIDController.openIDCallback().absoluteURL(request()));
 
@@ -43,14 +43,14 @@ public class OpenIDController extends Controller {
   public Promise<Result> openIDCallback() {
 
     final Promise<UserInfo> userInfoPromise = openIdClient.verifiedId();
-    
+
     final Promise<Result> resultPromise = userInfoPromise.map(userInfo -> {
-      return (Result) ok(userInfo.id + "\n" + userInfo.attributes);
+      return (Result) ok(userInfo.id() + "\n" + userInfo.attributes());
     }).recover(throwable -> {
       //###replace:         return badRequest(views.html.login.render(throwable.getMessage()));
       return badRequest(javaguide.ws.html.login.render(throwable.getMessage()));
     });
-    
+
     return resultPromise;
   }
 
