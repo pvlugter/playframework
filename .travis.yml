@@ -1,0 +1,13 @@
+language: scala
+
+jdk:
+  - oraclejdk7
+
+env:
+  matrix:
+    - $PLAY_TEST="-Dscala.version=2.10.4 --crossbuild 2.11.2"
+    - $PLAY_TEST="-Dscala.version=2.11.2 --crossbuild 2.10.4"
+
+script:
+  - cd framework
+  - ./runtests $PLAY_TEST
