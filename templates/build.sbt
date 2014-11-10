@@ -2,6 +2,10 @@ import play.sbt.activator.Templates._
 
 templateSettings
 
+lazy val playTemplates = (project in file(".")).dependsOn(playFramework)
+
+lazy val playFramework = RootProject(Path.fileProperty("user.dir").getParentFile / "framework")
+
 val playSbtVersion = propOrElse("sbt.version", "0.13.5")
 
 val coffeescriptVersion = propOrElse("coffeescript.version", "1.0.0")
@@ -35,6 +39,11 @@ val playVersion = propOrElse("play.version", {
 
 // The Play templates should default to using the latest compatible version of Scala
 val playScalaVersion = propOrElse("scala.version", "2.11.1")
+
+// Publish local all play artifacts before testing templates
+beforeTestTemplates := {
+  Project.extract(state.value).runAggregated(publishLocal in playFramework, state.value)
+}
 
 val playDocsUrl = propOrElse("play.docs.url", {
   // Use a version like 2.4.x for the documentation

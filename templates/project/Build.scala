@@ -15,6 +15,7 @@ object Templates {
   val syncTemplates = TaskKey[Seq[File]]("sync-templates")
 
   val prepareTemplates = TaskKey[Seq[File]]("prepare-templates")
+  val beforeTestTemplates = TaskKey[Unit]("before-test-templates")
   val testTemplates = TaskKey[Unit]("test-templates")
   val zipTemplates = TaskKey[Seq[File]]("zip-templates")
   val publishTemplatesTo = SettingKey[String]("publish-templates-to")
@@ -79,6 +80,7 @@ object Templates {
     },
 
     testTemplates := {
+      val _ = beforeTestTemplates.value
       val preparedTemplates = syncTemplates.value
       val testDir = target.value / "template-tests"
       val build = (baseDirectory.value.getParentFile / "framework" / "build").getCanonicalPath
@@ -110,7 +112,7 @@ object Templates {
     },
 
     gitHash := "git rev-parse HEAD".!!.trim,
-    nonce := System.currentTimeMillis, 
+    nonce := System.currentTimeMillis,
 
     S3.host in S3.upload := "downloads.typesafe.com.s3.amazonaws.com",
     S3.progress in S3.upload := true,
@@ -170,7 +172,7 @@ object Templates {
           }, duration.toMillis)
           promise.future
         }
-       
+
         def waitUntilNotPending(uuid: String, statusUrl: String): Future[Either[String, String]] = {
           val status: Future[TemplateStatus] = for {
             _ <- timeout(2.seconds)
@@ -248,7 +250,7 @@ object Templates {
         streams <- s
         result <- dpt
         _ <- {
-          streams.log.info("Cleaning up S3...") 
+          streams.log.info("Cleaning up S3...")
           s3delete
         }
       } yield result match {
