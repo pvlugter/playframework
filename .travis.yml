@@ -11,6 +11,7 @@ jdk:
 env:
   matrix:
     - PLAY_TEST="cd framework && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test"
+    - PLAY_TEST="cd framework && ./build SBT-Plugin/scripted Play-Akka-Http-Server-Experimental/scripted"
     - PLAY_TEST="cd documentation && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test validateDocs"
 
 script: eval "$PLAY_TEST"
