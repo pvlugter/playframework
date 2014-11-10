@@ -13,5 +13,6 @@ env:
     - PLAY_TEST="cd framework && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test"
     - PLAY_TEST="cd framework && ./build SBT-Plugin/scripted Play-Akka-Http-Server-Experimental/scripted"
     - PLAY_TEST="cd documentation && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION test validateDocs"
+    - PLAY_TEST="cd templates && ./build -Dscala.version=\$TRAVIS_SCALA_VERSION testTemplates"
 
 script: eval "$PLAY_TEST"
