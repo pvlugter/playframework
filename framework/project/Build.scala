@@ -372,6 +372,7 @@ object PlayBuild extends Build {
       scriptedLaunchOpts ++= Seq(
         "-Xmx768m",
         maxMetaspace,
+        "-Xss2M",
         "-Dperformance.log=" + new File(baseDirectory.value, "target/sbt-repcomile-performance.properties"),
         "-Dproject.version=" + version.value,
         "-Dscala.version=" + buildScalaVersion
