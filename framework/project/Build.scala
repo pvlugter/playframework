@@ -355,15 +355,20 @@ object PlayBuild extends Build {
       }
     ).dependsOn(RoutesCompilerProject, SbtRunSupportProject)
 
+  val picklerTest = taskKey[Unit]("pickler compile test")
+
   lazy val ForkRunProtocolProject = PlayDevelopmentProject("Fork-Run-Protocol", "fork-run-protocol")
-    .settings(libraryDependencies ++= forkRunProtocolDependencies(scalaBinaryVersion.value))
+    .settings(
+      libraryDependencies ++= forkRunProtocolDependencies(scalaBinaryVersion.value),
+      picklerTest := { val c = (compile in Compile).value ; val d = (doc in Compile).value })
     .dependsOn(RunSupportProject)
 
   // extra fork-run-protocol project that is only compiled against sbt scala version
   lazy val SbtForkRunProtocolProject = PlaySbtProject("SBT-Fork-Run-Protocol", "fork-run-protocol")
     .settings(
       target := target.value / "sbt-fork-run-protocol",
-      libraryDependencies ++= forkRunProtocolDependencies(scalaBinaryVersion.value))
+      libraryDependencies ++= forkRunProtocolDependencies(scalaBinaryVersion.value),
+      picklerTest := { val c = (compile in Compile).value ; val d = (doc in Compile).value })
     .dependsOn(SbtRunSupportProject)
 
   lazy val ForkRunProject = PlayDevelopmentProject("Fork-Run", "fork-run")
